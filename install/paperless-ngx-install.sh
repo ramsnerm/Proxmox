@@ -126,10 +126,10 @@ install_paperless_ngx() {
     msg_info "Installing Paperless-ngx (Patience)"
     local Paperlessngx
     Paperlessngx=$(wget -q https://github.com/paperless-ngx/paperless-ngx/releases/latest -O - | grep "title>Release" | cut -d " " -f 5)
-    $STD wget "https://github.com/paperless-ngx/paperless-ngx/releases/download/$Paperlessngx/paperless-ngx-$Paperlessngx.tar.xz -P" /opt
-    $STD tar -xf "/opt/paperless-ngx-$Paperlessngx.tar.xz" -C /opt/
+    $STD wget https://github.com/paperless-ngx/paperless-ngx/releases/download/"$Paperlessngx"/paperless-ngx-"$Paperlessngx".tar.xz -P /opt
+    $STD tar -xf /opt/paperless-ngx-"$Paperlessngx".tar.xz -C /opt/
     mv /opt/paperless-ngx /opt/paperless
-    rm "/opt/paperless-ngx-$Paperlessngx.tar.xz"
+    rm /opt/paperless-ngx-"$Paperlessngx".tar.xz
     $STD pip install --upgrade pip
     $STD pip install -r /opt/paperless/requirements.txt
     curl -s -o /opt/paperless/paperless.conf https://raw.githubusercontent.com/paperless-ngx/paperless-ngx/main/paperless.conf.example
