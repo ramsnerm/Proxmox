@@ -21,12 +21,13 @@ update_os
 # Initialize global variables for paperless/PostgreSQL configuration
 DB_PORT="5432"
 DB_TIMEZONE="UTC"
+OCR_LANGUAGE="eng"
 
 # Function to install system dependencies
 install_dependencies() {
     install_postgresql
     msg_info "Installing Dependencies (Patience)"
-    $STD apt install --no-install-recommends \
+    $STD apt -y install --no-install-recommends \
       redis \
       build-essential \
       imagemagick \
@@ -56,14 +57,14 @@ install_dependencies() {
 install_postgresql() {
     read -r -p "Do you want to install PostgreSQL or connect to an already installed instance? <yes to install/no to connect> " POSTGRES_INSTALL
     if [[ "${POSTGRES_INSTALL,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y)$ ]]; then  
-        $STD apt install --no-install-recommends postgresql
+        $STD apt -y install --no-install-recommends postgresql
     fi
 }
 
 # Function to install Python dependencies
 install_python_dependencies() {
     msg_info "Installing Python3 Dependencies"
-    $STD apt install --no-install-recommends \
+    $STD apt -y install --no-install-recommends \
       python3 \
       python3-pip \
       python3-dev \
@@ -75,7 +76,7 @@ install_python_dependencies() {
 # Function to install OCR dependencies and potentially additional languages
 install_ocr_dependencies() {
     msg_info "Installing OCR Dependencies (Patience)"
-    $STD apt install --no-install-recommends \
+    $STD apt -y install --no-install-recommends \
       unpaper \
       ghostscript \
       icc-profiles-free \
@@ -95,12 +96,12 @@ install_additional_ocr_languages() {
     read -r -p "Would you like to install additional languages for OCR (English is installed by default)? <y/N> " prompt
     if [[ "${prompt,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y)$ ]]; then 
         echo "Enter the language codes (e.g., deu,fra,spa): "
-        read -r -p "separated by commas: " OCR_LANGUAGE
-        IFS=',' read -ra LANGUAGE_ARRAY <<< "$OCR_LANGUAGE"
+        read -r -p "separated by commas: " prompt
+        IFS=',' read -ra LANGUAGE_ARRAY <<< "$prompt"
         for LANGUAGE_CODE in "${LANGUAGE_ARRAY[@]}"; do
-            apt install --no-install-recommends "tesseract-ocr-$LANGUAGE_CODE"
+            apt -y install --no-install-recommends "tesseract-ocr-$LANGUAGE_CODE"
+            OCR_LANGUAGE+="+$LANGUAGE_CODE"
         done
-        sed -i -e "s|#PAPERLESS_OCR_LANGUAGE=eng|PAPERLESS_OCR_LANGUAGE=eng+$OCR_LANGUAGE|" /opt/paperless/paperless.conf
     fi
 }
 
@@ -137,7 +138,8 @@ install_paperless_ngx() {
     sed -i -e "s|#PAPERLESS_DATA_DIR=../data|PAPERLESS_DATA_DIR=/opt/paperless/data|" /opt/paperless/paperless.conf
     sed -i -e "s|#PAPERLESS_MEDIA_ROOT=../media|PAPERLESS_MEDIA_ROOT=/opt/paperless/media|" /opt/paperless/paperless.conf
     sed -i -e "s|#PAPERLESS_STATICDIR=../static|PAPERLESS_STATICDIR=/opt/paperless/static|" /opt/paperless/paperless.conf
-    
+    sed -i -e "s|#PAPERLESS_OCR_LANGUAGE=eng|PAPERLESS_OCR_LANGUAGE=$OCR_LANGUAGE|" /opt/paperless/paperless.conf
+
     msg_ok "Installed Paperless-ngx"
 }
 
@@ -280,7 +282,7 @@ install_adminer() {
     read -r -p "Would you like to add Adminer? <y/N> " prompt
     if [[ "${prompt,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y)$ ]]; then
     msg_info "Installing Adminer"
-    $STD apt install adminer
+    $STD apt -y install adminer
     $STD a2enconf adminer
     systemctl reload apache2
     IP=$(hostname -I | awk '{print $1}')
@@ -383,8 +385,8 @@ customize_motd_ssh() {
 cleanup_system() {
     msg_info "Cleaning up"
     rm -rf /opt/paperless/docker
-    $STD apt-get autoremove
-    $STD apt-get autoclean
+    $STD apt autoremove
+    $STD apt autoclean
     msg_ok "Cleaned"
 }
 
