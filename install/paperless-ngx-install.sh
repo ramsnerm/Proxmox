@@ -169,8 +169,6 @@ configure_paperless_settings() {
     read -r -p "${spacer}Enter your timezone (e.g., 'Europe/Vienna', 'America/New_York' or leave empty for UTC): " input_timezone
     DB_TIMEZONE="${input_timezone:-$DB_TIMEZONE}"
 
-    msg_info "Configuring paperless.conf settings"
-
     # Set database and other environment-specific settings
     sed -i -e "s|#PAPERLESS_DBHOST=localhost|PAPERLESS_DBHOST=$DB_HOST|" /opt/paperless/paperless.conf
     sed -i -e "s|#PAPERLESS_DBPORT=5432|PAPERLESS_DBPORT=$DB_PORT|" /opt/paperless/paperless.conf
