@@ -169,6 +169,8 @@ configure_paperless_settings() {
     read -r -p "${spacer}Enter your timezone (e.g., 'Europe/Vienna', 'America/New_York' or leave empty for UTC): " input_timezone
     DB_TIMEZONE="${input_timezone:-$DB_TIMEZONE}"
 
+    msg_info "Configure paperless.conf settings"
+
     # Set database and other environment-specific settings
     sed -i -e "s|#PAPERLESS_DBHOST=localhost|PAPERLESS_DBHOST=$DB_HOST|" /opt/paperless/paperless.conf
     sed -i -e "s|#PAPERLESS_DBPORT=5432|PAPERLESS_DBPORT=$DB_PORT|" /opt/paperless/paperless.conf
@@ -178,6 +180,8 @@ configure_paperless_settings() {
     sed -i -e "s|#PAPERLESS_SECRET_KEY=change-me|PAPERLESS_SECRET_KEY=$SECRET_KEY|" /opt/paperless/paperless.conf
     sed -i -e "s|#PAPERLESS_TIMEZONE=UTC|PAPERLESS_TIMEZONE=$DB_TIMEZONE|" /opt/paperless/paperless.conf
     
+    msg_ok "Configured paperless.conf settings"
+
     # Additional configurations based on user input
     read -r -p "${spacer}Enter paperless URL (e.g. https://paperless.yourdomain.com, leave empty for default setting) ? " PAPERLESS_URL
     if [[ -n $PAPERLESS_URL ]]; then
@@ -199,9 +203,7 @@ configure_paperless_settings() {
     read -r -p "${spacer}Would you like to enable TIKA (Default 'false')? <y/N> " enable_tika
     if [[ "${enable_tika,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y)$ ]]; then 
       sed -i -e "s|#PAPERLESS_TIKA_ENABLED=false|PAPERLESS_TIKA_ENABLED=true|" /opt/paperless/paperless.conf
-    fi
-    
-    msg_ok "Configured paperless.conf settings"
+    fi   
 }
 
 # Helper Function to prompt user for PostgreSQL configuration
@@ -215,7 +217,6 @@ prompt_postgresql_config() {
         read -r -p "${sub_spacer}User name: " DB_USER
         read -r -p "${sub_spacer}Password: " DB_PASS
         read -r -p "${sub_spacer}Secret key: " SECRET_KEY
-        msg_ok "User defined PostgreSQL credentials installed"
     else
         # Default PostgreSQL setup
         DB_HOST="localhost"
@@ -223,7 +224,6 @@ prompt_postgresql_config() {
         DB_USER="paperless"
         DB_PASS="$(openssl rand -base64 18 | cut -c1-13)"
         SECRET_KEY="$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 32)"
-        msg_ok "Installed standard PostgreSQL credentials"
     fi
 }
 
