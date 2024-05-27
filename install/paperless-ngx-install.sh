@@ -87,8 +87,9 @@ install_ocr_dependencies() {
       zlib1g \
       tesseract-ocr \
       tesseract-ocr-eng
-    install_additional_ocr_languages
     msg_ok "Installed OCR Dependencies"
+
+    install_additional_ocr_languages
 }
 
 # Helper function to handle additional OCR language installation
@@ -104,6 +105,7 @@ install_additional_ocr_languages() {
             OCR_LANGUAGE+="+$LANGUAGE_CODE"
         done
     fi
+    msg_ok "Installed additional OCR Languages"
 }
 
 # Function to install JBIG2 encoder for optimizing scanned PDF files
