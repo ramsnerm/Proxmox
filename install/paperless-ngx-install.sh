@@ -60,7 +60,7 @@ install_dependencies() {
 install_postgresql() {
     read -r -p "${spacer}Do you want to install PostgreSQL or connect to an already installed instance? <yes to install/no to connect> " POSTGRES_INSTALL
     if [[ "${POSTGRES_INSTALL,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y)$ ]]; then  
-        msg_info "Installing PostgreSQL"
+        msg_info "Installing PostgreSQL (Patience)"
         $STD apt -y install --no-install-recommends postgresql
         msg_ok "Installed PostgreSQL"
     fi
@@ -68,7 +68,7 @@ install_postgresql() {
 
 # Function to install Python dependencies
 install_python_dependencies() {
-    msg_info "Installing Python3 Dependencies"
+    msg_info "Installing Python3 Dependencies (Patience)"
     $STD apt -y install --no-install-recommends \
       python3 \
       python3-pip \
@@ -103,8 +103,8 @@ install_additional_ocr_languages() {
     read -r -p "${spacer}Would you like to install additional languages for OCR (English is installed by default)? <y/N> " prompt
 
     if [[ "${prompt,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y)$ ]]; then 
-        echo "${sub_spacer}Enter the language codes (e.g., deu,fra,spa - for all language codes see https://tesseract-ocr.github.io/tessdoc/Data-Files.html)"
-        read -r -p "${sub_spacer}separated by commas: " prompt
+        echo "${sub_spacer}Set the required OCR language codes (For a list of language codes see https://tesseract-ocr.github.io/tessdoc/Data-Files.html)"
+        read -r -p "${sub_spacer}Enter the required OCR languages separated by commas (e.g. deu,fra,spa): " prompt
         msg_info "Installing additional OCR Languages"
         IFS=',' read -ra LANGUAGE_ARRAY <<< "$prompt"
         for LANGUAGE_CODE in "${LANGUAGE_ARRAY[@]}"; do
@@ -117,7 +117,7 @@ install_additional_ocr_languages() {
 
 # Function to install JBIG2 encoder for optimizing scanned PDF files
 install_jbig2() {
-    msg_info "Installing JBIG2"
+    msg_info "Installing JBIG2 (Patience)"
     $STD git clone https://github.com/agl/jbig2enc /opt/jbig2enc
     cd /opt/jbig2enc || exit 1
     $STD bash ./autogen.sh
