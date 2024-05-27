@@ -23,6 +23,9 @@ DB_PORT="5432"
 DB_TIMEZONE="UTC"
 OCR_LANGUAGE="eng"
 
+spacer="   > "
+sub_spacer="     - "
+
 # Function to install system dependencies
 install_dependencies() {
     install_postgresql
@@ -55,7 +58,7 @@ install_dependencies() {
 
 # Function to optionally install PostgreSQL
 install_postgresql() {
-    read -r -p "Do you want to install PostgreSQL or connect to an already installed instance? <yes to install/no to connect> " POSTGRES_INSTALL
+    read -r -p "${spacer}Do you want to install PostgreSQL or connect to an already installed instance? <yes to install/no to connect> " POSTGRES_INSTALL
     if [[ "${POSTGRES_INSTALL,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y)$ ]]; then  
         msg_info "Installing PostgreSQL"
         $STD apt -y install --no-install-recommends postgresql
@@ -97,10 +100,11 @@ install_ocr_dependencies() {
 
 # Helper function to handle additional OCR language installation
 install_additional_ocr_languages() {
-    read -r -p "Would you like to install additional languages for OCR (English is installed by default)? <y/N> " prompt
+    read -r -p "${spacer}Would you like to install additional languages for OCR (English is installed by default)? <y/N> " prompt
+
     if [[ "${prompt,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y)$ ]]; then 
-        echo "Enter the language codes (e.g., deu,fra,spa): "
-        read -r -p "separated by commas: " prompt
+        echo "${sub_spacer}Enter the language codes (e.g., deu,fra,spa - for all language codes see https://tesseract-ocr.github.io/tessdoc/Data-Files.html)"
+        read -r -p "${sub_spacer}separated by commas: " prompt
         msg_info "Installing additional OCR Languages"
         IFS=',' read -ra LANGUAGE_ARRAY <<< "$prompt"
         for LANGUAGE_CODE in "${LANGUAGE_ARRAY[@]}"; do
@@ -162,7 +166,7 @@ configure_paperless_settings() {
     
     prompt_postgresql_config
     
-    read -r -p "Enter your timezone (e.g., 'Europe/Vienna', 'America/New_York' or leave empty for UTC): " input_timezone
+    read -r -p "${spacer}Enter your timezone (e.g., 'Europe/Vienna', 'America/New_York' or leave empty for UTC): " input_timezone
     DB_TIMEZONE="${input_timezone:-$DB_TIMEZONE}"
 
     msg_info "Configuring paperless.conf settings"
@@ -177,24 +181,24 @@ configure_paperless_settings() {
     sed -i -e "s|#PAPERLESS_TIMEZONE=UTC|PAPERLESS_TIMEZONE=$DB_TIMEZONE|" /opt/paperless/paperless.conf
     
     # Additional configurations based on user input
-    read -r -p "Enter paperless URL (e.g. https://paperless.yourdomain.com, leave empty for default setting) ? " PAPERLESS_URL
+    read -r -p "${spacer}Enter paperless URL (e.g. https://paperless.yourdomain.com, leave empty for default setting) ? " PAPERLESS_URL
     if [[ -n $PAPERLESS_URL ]]; then
       sed -i -e "s|#PAPERLESS_URL=https://example.com|PAPERLESS_URL=$PAPERLESS_URL|" /opt/paperless/paperless.conf
     fi
 
-    read -r -p "Would you like to enable HTTP remote user (Default 'false')? <y/N> " enable_http_remote
+    read -r -p "${spacer}Would you like to enable HTTP remote user (Default 'false')? <y/N> " enable_http_remote
     if [[ "${enable_http_remote,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y)$ ]]; then 
       sed -i -e "s|#PAPERLESS_ENABLE_HTTP_REMOTE_USER=false|PAPERLESS_ENABLE_HTTP_REMOTE_USER=true|" /opt/paperless/paperless.conf
-      read -r -p "Enter Header Name for remote user: " remote_user_header
+      read -r -p "${sub_spacer}Enter Header Name for remote user: " remote_user_header
       echo "PAPERLESS_HTTP_REMOTE_USER_HEADER_NAME=$remote_user_header" >> /opt/paperless/paperless.conf
     fi
 
-    read -r -p "Would you like to allow importing PDFs with invalidated signature (Default 'false')? <y/N> " allow_invalid_pdf
+    read -r -p "${spacer}Would you like to allow importing PDFs with invalidated signature (Default 'false')? <y/N> " allow_invalid_pdf
     if [[ "${allow_invalid_pdf,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y)$ ]]; then 
       sed -i -e 's|#PAPERLESS_OCR_USER_ARGS={}|PAPERLESS_OCR_USER_ARGS={"invalidate_digital_signatures": true}|' /opt/paperless/paperless.conf
     fi
 
-    read -r -p "Would you like to enable TIKA (Default 'false')? <y/N> " enable_tika
+    read -r -p "${spacer}Would you like to enable TIKA (Default 'false')? <y/N> " enable_tika
     if [[ "${enable_tika,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y)$ ]]; then 
       sed -i -e "s|#PAPERLESS_TIKA_ENABLED=false|PAPERLESS_TIKA_ENABLED=true|" /opt/paperless/paperless.conf
     fi
@@ -204,15 +208,15 @@ configure_paperless_settings() {
 
 # Helper Function to prompt user for PostgreSQL configuration
 prompt_postgresql_config() {
-    read -r -p "Would you like to set your own PostgreSQL credentials? <y/N> " prompt
+    read -r -p "${spacer}Would you like to set your own PostgreSQL credentials? <y/N> " prompt
     if [[ "${prompt,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y)$ ]]; then
-        read -r -p "Host address (FQDN or IP): " DB_HOST
-        read -r -p "Port (leave empty for 5432): " input_port
+        read -r -p "${sub_spacer}Host address (FQDN or IP): " DB_HOST
+        read -r -p "${aub_spacer}Port (leave empty for 5432): " input_port
         DB_PORT=${input_port:-$DB_PORT}
-        read -r -p "Paperless database name: " DB_NAME
-        read -r -p "User name: " DB_USER
-        read -r -p "Password: " DB_PASS
-        read -r -p "Secret key: " SECRET_KEY
+        read -r -p "${sub_spacer}Paperless database name: " DB_NAME
+        read -r -p "${sub_spacer}User name: " DB_USER
+        read -r -p "${sub_spacer}Password: " DB_PASS
+        read -r -p "${sub_spacer}Secret key: " SECRET_KEY
         msg_ok "User defined PostgreSQL credentials installed"
     else
         # Default PostgreSQL setup
@@ -258,8 +262,8 @@ setup_paperless_admin_user() {
     local default_password="$DB_PASS"
 
     # Prompt the user for custom admin username and password
-    read -r -p "Enter Paperless admin username (Enter for default: $default_username): " admin_username
-    read -r -p "Enter Paperless admin password (Enter for default: $default_password): " admin_password
+    read -r -p "${spacer}Enter Paperless admin username (Enter for default: $default_username): " admin_username
+    read -r -p "${spacer}Enter Paperless admin password (Enter for default: $default_password): " admin_password
 
     msg_info "Setting up admin Paperless-ngx User & Password"
 
@@ -290,7 +294,7 @@ EOF
 
 # Function to install Adminer (Optional) 
 install_adminer() {
-    read -r -p "Would you like to add Adminer? <y/N> " prompt
+    read -r -p "${spacer}Would you like to add Adminer? <y/N> " prompt
     if [[ "${prompt,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y)$ ]]; then
     msg_info "Installing Adminer"
     $STD apt -y install adminer
@@ -372,7 +376,7 @@ EOF
 
     systemctl daemon-reload
 
-    read -r -p "Do you want to start the Paperless services now (Default: yes)? <y/N> " start_services
+    read -r -p "${spacer}Do you want to start the Paperless services now (Default: yes)? <y/N> " start_services
     start_services=${start_services:-y}
 
     if [[ "${start_services,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y|)$ ]]; then
