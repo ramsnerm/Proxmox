@@ -93,6 +93,7 @@ install_ocr_dependencies() {
 
 # Helper function to handle additional OCR language installation
 install_additional_ocr_languages() {
+    msg_info "Installing additional OCR Languages"
     read -r -p "Would you like to install additional languages for OCR (English is installed by default)? <y/N> " prompt
     if [[ "${prompt,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y)$ ]]; then 
         echo "Enter the language codes (e.g., deu,fra,spa): "
@@ -123,7 +124,7 @@ install_paperless_ngx() {
     msg_info "Installing Paperless-ngx (Patience)"
     local Paperlessngx
     Paperlessngx=$(wget -q https://github.com/paperless-ngx/paperless-ngx/releases/latest -O - | grep "title>Release" | cut -d " " -f 5)
-    $STD wget "https://github.com/paperless-ngx/paperless-ngx/releases/download/$Paperlessngx/paperless-ngx-$Paperlessngx.tar.xz -P /opt"
+    $STD wget "https://github.com/paperless-ngx/paperless-ngx/releases/download/$Paperlessngx/paperless-ngx-$Paperlessngx.tar.xz -P" /opt
     $STD tar -xf "/opt/paperless-ngx-$Paperlessngx.tar.xz" -C /opt/
     mv /opt/paperless-ngx /opt/paperless
     rm "/opt/paperless-ngx-$Paperlessngx.tar.xz"
