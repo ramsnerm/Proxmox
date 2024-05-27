@@ -133,8 +133,9 @@ install_paperless_ngx() {
     $STD tar -xf /opt/paperless-ngx-"$Paperlessngx".tar.xz -C /opt/
     mv /opt/paperless-ngx /opt/paperless
     rm /opt/paperless-ngx-"$Paperlessngx".tar.xz
-    $STD /opt/paperless/pip install --upgrade pip
-    $STD /opt/paperless/pip install -r /opt/paperless/requirements.txt
+    cd /opt/paperless/ || exit 1
+    $STD pip install --upgrade pip
+    $STD pip install -r /opt/paperless/requirements.txt
     curl -s -o /opt/paperless/paperless.conf https://raw.githubusercontent.com/paperless-ngx/paperless-ngx/main/paperless.conf.example
     mkdir -p /opt/paperless/{consume,data,media,static}
     echo "${Paperlessngx}" >"/opt/${APPLICATION}_version.txt"
