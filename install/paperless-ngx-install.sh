@@ -211,7 +211,7 @@ prompt_postgresql_config() {
     read -r -p "${spacer}Would you like to set your own PostgreSQL credentials? <y/N> " prompt
     if [[ "${prompt,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y)$ ]]; then
         read -r -p "${sub_spacer}Host address (FQDN or IP): " DB_HOST
-        read -r -p "${aub_spacer}Port (leave empty for 5432): " input_port
+        read -r -p "${sub_spacer}Port (leave empty for 5432): " input_port
         DB_PORT=${input_port:-$DB_PORT}
         read -r -p "${sub_spacer}Paperless database name: " DB_NAME
         read -r -p "${sub_spacer}User name: " DB_USER
