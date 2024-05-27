@@ -57,7 +57,9 @@ install_dependencies() {
 install_postgresql() {
     read -r -p "Do you want to install PostgreSQL or connect to an already installed instance? <yes to install/no to connect> " POSTGRES_INSTALL
     if [[ "${POSTGRES_INSTALL,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y)$ ]]; then  
+        msg_info "Installing PostgreSQL"
         $STD apt -y install --no-install-recommends postgresql
+        msg_ok "Installed PostgreSQL"
     fi
 }
 
@@ -87,6 +89,7 @@ install_ocr_dependencies() {
       zlib1g \
       tesseract-ocr \
       tesseract-ocr-eng
+
     msg_ok "Installed OCR Dependencies"
 
     install_additional_ocr_languages
@@ -94,18 +97,19 @@ install_ocr_dependencies() {
 
 # Helper function to handle additional OCR language installation
 install_additional_ocr_languages() {
-    msg_info "Installing additional OCR Languages"
     read -r -p "Would you like to install additional languages for OCR (English is installed by default)? <y/N> " prompt
     if [[ "${prompt,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y)$ ]]; then 
+        msg_info "Installing additional OCR Languages"
+
         echo "Enter the language codes (e.g., deu,fra,spa): "
         read -r -p "separated by commas: " prompt
         IFS=',' read -ra LANGUAGE_ARRAY <<< "$prompt"
         for LANGUAGE_CODE in "${LANGUAGE_ARRAY[@]}"; do
-            apt -y install --no-install-recommends "tesseract-ocr-$LANGUAGE_CODE"
+            $STD apt -y install --no-install-recommends "tesseract-ocr-$LANGUAGE_CODE"
             OCR_LANGUAGE+="+$LANGUAGE_CODE"
         done
+        msg_ok "Installed additional OCR Languages"
     fi
-    msg_ok "Installed additional OCR Languages"
 }
 
 # Function to install JBIG2 encoder for optimizing scanned PDF files
@@ -130,8 +134,8 @@ install_paperless_ngx() {
     $STD tar -xf /opt/paperless-ngx-"$Paperlessngx".tar.xz -C /opt/
     mv /opt/paperless-ngx /opt/paperless
     rm /opt/paperless-ngx-"$Paperlessngx".tar.xz
-    $STD pip install --upgrade pip
-    $STD pip install -r /opt/paperless/requirements.txt
+    $STD /opt/pip install --upgrade pip
+    $STD /opt/pip install -r /opt/paperless/requirements.txt
     curl -s -o /opt/paperless/paperless.conf https://raw.githubusercontent.com/paperless-ngx/paperless-ngx/main/paperless.conf.example
     mkdir -p /opt/paperless/{consume,data,media,static}
     echo "${Paperlessngx}" >"/opt/${APPLICATION}_version.txt"
@@ -198,6 +202,7 @@ configure_paperless_settings() {
 
 # Helper Function to prompt user for PostgreSQL configuration
 prompt_postgresql_config() {
+    msg_info "Set PostgreSQL creentials"
     read -r -p "Would you like to set your own PostgreSQL credentials? <y/N> " prompt
     if [[ "${prompt,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y)$ ]]; then
         read -r -p "Host address (FQDN or IP): " DB_HOST
@@ -207,6 +212,7 @@ prompt_postgresql_config() {
         read -r -p "User name: " DB_USER
         read -r -p "Password: " DB_PASS
         read -r -p "Secret key: " SECRET_KEY
+        msg_ok "User defined PostgreSQL credentials installed"
     else
         # Default PostgreSQL setup
         DB_HOST="localhost"
@@ -214,6 +220,7 @@ prompt_postgresql_config() {
         DB_USER="paperless"
         DB_PASS="$(openssl rand -base64 18 | cut -c1-13)"
         SECRET_KEY="$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 32)"
+        msg_ok "Installed standard PostgreSQL credentials"
     fi
 }
 
@@ -249,6 +256,8 @@ setup_paperless_admin_user() {
     local default_username="admin"
     local default_password="$DB_PASS"
 
+    msg_info "Setting up admin Paperless-ngx User & Password"
+
     # Prompt the user for custom admin username and password
     read -r -p "Enter Paperless admin username (Enter for default: $default_username): " admin_username
     read -r -p "Enter Paperless admin password (Enter for default: $default_password): " admin_password
@@ -256,8 +265,6 @@ setup_paperless_admin_user() {
     # Use default values if the user did not provide any input
     admin_username=${admin_username:-$default_username}
     admin_password=${admin_password:-$default_password}
-
-    msg_info "Setting up admin Paperless-ngx User & Password"
 
     # Create the admin user with the provided or default username and password
     cat <<EOF | python3 /opt/paperless/src/manage.py shell
