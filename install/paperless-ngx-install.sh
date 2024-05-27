@@ -99,10 +99,9 @@ install_ocr_dependencies() {
 install_additional_ocr_languages() {
     read -r -p "Would you like to install additional languages for OCR (English is installed by default)? <y/N> " prompt
     if [[ "${prompt,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y)$ ]]; then 
-        msg_info "Installing additional OCR Languages"
-
         echo "Enter the language codes (e.g., deu,fra,spa): "
         read -r -p "separated by commas: " prompt
+        msg_info "Installing additional OCR Languages"
         IFS=',' read -ra LANGUAGE_ARRAY <<< "$prompt"
         for LANGUAGE_CODE in "${LANGUAGE_ARRAY[@]}"; do
             $STD apt -y install --no-install-recommends "tesseract-ocr-$LANGUAGE_CODE"
@@ -134,8 +133,8 @@ install_paperless_ngx() {
     $STD tar -xf /opt/paperless-ngx-"$Paperlessngx".tar.xz -C /opt/
     mv /opt/paperless-ngx /opt/paperless
     rm /opt/paperless-ngx-"$Paperlessngx".tar.xz
-    $STD /opt/pip install --upgrade pip
-    $STD /opt/pip install -r /opt/paperless/requirements.txt
+    $STD /opt/paperless/pip install --upgrade pip
+    $STD /opt/paperless/pip install -r /opt/paperless/requirements.txt
     curl -s -o /opt/paperless/paperless.conf https://raw.githubusercontent.com/paperless-ngx/paperless-ngx/main/paperless.conf.example
     mkdir -p /opt/paperless/{consume,data,media,static}
     echo "${Paperlessngx}" >"/opt/${APPLICATION}_version.txt"
@@ -159,11 +158,13 @@ install_nltk() {
 
 # Function to configure Paperless-ngx settings in the paperless.conf file
 configure_paperless_settings() {
-    msg_info "Configuring paperless.conf settings"
+    
     prompt_postgresql_config
     
     read -r -p "Enter your timezone (e.g., 'Europe/Vienna', 'America/New_York' or leave empty for UTC): " input_timezone
     DB_TIMEZONE="${input_timezone:-$DB_TIMEZONE}"
+
+    msg_info "Configuring paperless.conf settings"
 
     # Set database and other environment-specific settings
     sed -i -e "s|#PAPERLESS_DBHOST=localhost|PAPERLESS_DBHOST=$DB_HOST|" /opt/paperless/paperless.conf
@@ -202,7 +203,6 @@ configure_paperless_settings() {
 
 # Helper Function to prompt user for PostgreSQL configuration
 prompt_postgresql_config() {
-    msg_info "Set PostgreSQL creentials"
     read -r -p "Would you like to set your own PostgreSQL credentials? <y/N> " prompt
     if [[ "${prompt,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y)$ ]]; then
         read -r -p "Host address (FQDN or IP): " DB_HOST
@@ -256,11 +256,11 @@ setup_paperless_admin_user() {
     local default_username="admin"
     local default_password="$DB_PASS"
 
-    msg_info "Setting up admin Paperless-ngx User & Password"
-
     # Prompt the user for custom admin username and password
     read -r -p "Enter Paperless admin username (Enter for default: $default_username): " admin_username
     read -r -p "Enter Paperless admin password (Enter for default: $default_password): " admin_password
+
+    msg_info "Setting up admin Paperless-ngx User & Password"
 
     # Use default values if the user did not provide any input
     admin_username=${admin_username:-$default_username}
