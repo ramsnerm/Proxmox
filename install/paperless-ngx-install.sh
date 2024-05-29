@@ -22,7 +22,7 @@ update_os
 DB_PORT="5432"
 DB_TIMEZONE="UTC"
 OCR_LANGUAGE="eng"
-DB_REMOTE="n"
+DB_REMOTE=false
 
 spacer="   > "
 sub_spacer="     - "
@@ -64,6 +64,8 @@ install_postgresql() {
         msg_info "Installing PostgreSQL (Patience)"
         $STD apt -y install --no-install-recommends postgresql
         msg_ok "Installed PostgreSQL"
+    else
+        DB_REMOTE=true
     fi
 }
 
@@ -209,9 +211,11 @@ configure_paperless_settings() {
 
 # Helper Function to prompt user for PostgreSQL configuration
 prompt_postgresql_config() {
-    read -r -p "${spacer}YOu decided to connect to an existing PostgreSQL Database Instance. Please enter the credentials ..." 
-    if [[ "${prompt,,}" =~ ^(y|yes)$ ]]; then
-        DB_REMOTE="y"
+    if [[ $DB_REMOTE = true ]]; then
+        echo ""
+        echo "${spacer}You decided to connect to an existing PostgreSQL Database Instance."
+        echo "In order to connect to it please enter the credentials ..." 
+        
         read -r -p "${sub_spacer}Host address (FQDN or IP): " DB_HOST
         read -r -p "${sub_spacer}Port (leave empty for 5432): " input_port
         DB_PORT=${input_port:-$DB_PORT}
@@ -233,8 +237,7 @@ prompt_postgresql_config() {
 configure_postgresql_database() {
     msg_info "Setting up PostgreSQL database"
 
-
-    if [[ $DB_REMOTE = "n" ]]; then
+    if [[ $DB_REMOTE = false ]]; then
         # Create user role and database
         $STD sudo -u postgres psql -c "CREATE ROLE $DB_USER WITH LOGIN PASSWORD '$DB_PASS';"
         $STD sudo -u postgres psql -c "CREATE DATABASE $DB_NAME WITH OWNER $DB_USER ENCODING 'UTF8' TEMPLATE template0;"
