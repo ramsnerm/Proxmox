@@ -22,6 +22,7 @@ update_os
 DB_PORT="5432"
 DB_TIMEZONE="UTC"
 OCR_LANGUAGE="eng"
+DB_REMOTE="n"
 
 spacer="   > "
 sub_spacer="     - "
@@ -208,8 +209,9 @@ configure_paperless_settings() {
 
 # Helper Function to prompt user for PostgreSQL configuration
 prompt_postgresql_config() {
-    read -r -p "${spacer}Would you like to set your own PostgreSQL credentials? <y/N> " prompt
+    read -r -p "${spacer}Would you like to set your own PostgreSQL credentials? <y/N> " 
     if [[ "${prompt,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y)$ ]]; then
+        DB_REMOTE="y"
         read -r -p "${sub_spacer}Host address (FQDN or IP): " DB_HOST
         read -r -p "${sub_spacer}Port (leave empty for 5432): " input_port
         DB_PORT=${input_port:-$DB_PORT}
@@ -230,13 +232,26 @@ prompt_postgresql_config() {
 # Function to configure PostgreSQL database and user
 configure_postgresql_database() {
     msg_info "Setting up PostgreSQL database"
-    # Create user role and database
-    $STD sudo -u postgres psql -c "CREATE ROLE $DB_USER WITH LOGIN PASSWORD '$DB_PASS';"
-    $STD sudo -u postgres psql -c "CREATE DATABASE $DB_NAME WITH OWNER $DB_USER ENCODING 'UTF8' TEMPLATE template0;"
-    $STD sudo -u postgres psql -c "ALTER ROLE $DB_USER SET client_encoding TO 'utf8';"
-    $STD sudo -u postgres psql -c "ALTER ROLE $DB_USER SET default_transaction_isolation TO 'read committed';"
-    $STD sudo -u postgres psql -c "ALTER ROLE $DB_USER SET timezone TO '$DB_TIMEZONE';"
 
+
+    if [[ $DB_REMOTE = "n" ]]; then
+        # Create user role and database
+        $STD sudo -u postgres psql -c "CREATE ROLE $DB_USER WITH LOGIN PASSWORD '$DB_PASS';"
+        $STD sudo -u postgres psql -c "CREATE DATABASE $DB_NAME WITH OWNER $DB_USER ENCODING 'UTF8' TEMPLATE template0;"
+        $STD sudo -u postgres psql -c "ALTER ROLE $DB_USER SET client_encoding TO 'utf8';"
+        $STD sudo -u postgres psql -c "ALTER ROLE $DB_USER SET default_transaction_isolation TO 'read committed';"
+        $STD sudo -u postgres psql -c "ALTER ROLE $DB_USER SET timezone TO '$DB_TIMEZONE';"
+    else
+        echo "assure databse is correct created ..."
+        # Nachricht anzeigen
+        echo "Press any key to continue..."
+
+        # Auf Tasteneingabe warten
+        read -n 1 -s
+
+        # Nach Tastendruck
+        echo "Continuing..."
+    fi
     {
         echo -e "Paperless-ngx Database User: \e[32m$DB_USER\e[0m"
         echo -e "Paperless-ngx Database Password: \e[32m$DB_PASS\e[0m"
