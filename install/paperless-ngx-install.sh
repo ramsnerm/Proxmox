@@ -60,7 +60,7 @@ install_dependencies() {
 # Function to optionally install PostgreSQL
 install_postgresql() {
     read -r -p "${spacer}Do you want to install PostgreSQL or connect to an already installed instance? <yes to install/no to connect> " POSTGRES_INSTALL
-    if [[ "${POSTGRES_INSTALL,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y)$ ]]; then  
+    if [[ "${POSTGRES_INSTALL,,}" =~ ^(y|yes)$ ]]; then  
         msg_info "Installing PostgreSQL (Patience)"
         $STD apt -y install --no-install-recommends postgresql
         msg_ok "Installed PostgreSQL"
@@ -103,7 +103,7 @@ install_ocr_dependencies() {
 install_additional_ocr_languages() {
     read -r -p "${spacer}Would you like to install additional languages for OCR (English is installed by default)? <y/N> " prompt
 
-    if [[ "${prompt,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y)$ ]]; then 
+    if [[ "${prompt,,}" =~ ^(y|yes)$ ]]; then 
         echo "${sub_spacer}Set the required OCR language codes (For a list of language codes see https://tesseract-ocr.github.io/tessdoc/Data-Files.html)"
         read -r -p "${sub_spacer}Enter the required OCR languages separated by commas (e.g. deu,fra,spa): " prompt
         msg_info "Installing additional OCR Languages"
@@ -190,27 +190,27 @@ configure_paperless_settings() {
     fi
 
     read -r -p "${spacer}Would you like to enable HTTP remote user (Default 'false')? <y/N> " enable_http_remote
-    if [[ "${enable_http_remote,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y)$ ]]; then 
+    if [[ "${enable_http_remote,,}" =~ ^(y|yes|Y)$ ]]; then 
       sed -i -e "s|#PAPERLESS_ENABLE_HTTP_REMOTE_USER=false|PAPERLESS_ENABLE_HTTP_REMOTE_USER=true|" /opt/paperless/paperless.conf
       read -r -p "${sub_spacer}Enter Header Name for remote user: " remote_user_header
       echo "PAPERLESS_HTTP_REMOTE_USER_HEADER_NAME=$remote_user_header" >> /opt/paperless/paperless.conf
     fi
 
     read -r -p "${spacer}Would you like to allow importing PDFs with invalidated signature (Default 'false')? <y/N> " allow_invalid_pdf
-    if [[ "${allow_invalid_pdf,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y)$ ]]; then 
+    if [[ "${allow_invalid_pdf,,}" =~ ^(y|yes)$ ]]; then 
       sed -i -e 's|#PAPERLESS_OCR_USER_ARGS={}|PAPERLESS_OCR_USER_ARGS={"invalidate_digital_signatures": true}|' /opt/paperless/paperless.conf
     fi
 
     read -r -p "${spacer}Would you like to enable TIKA (Default 'false')? <y/N> " enable_tika
-    if [[ "${enable_tika,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y)$ ]]; then 
+    if [[ "${enable_tika,,}" =~ ^(y|yes)$ ]]; then 
       sed -i -e "s|#PAPERLESS_TIKA_ENABLED=false|PAPERLESS_TIKA_ENABLED=true|" /opt/paperless/paperless.conf
     fi   
 }
 
 # Helper Function to prompt user for PostgreSQL configuration
 prompt_postgresql_config() {
-    read -r -p "${spacer}Would you like to set your own PostgreSQL credentials? <y/N> " 
-    if [[ "${prompt,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y)$ ]]; then
+    read -r -p "${spacer}YOu decided to connect to an existing PostgreSQL Database Instance. Please enter the credentials ..." 
+    if [[ "${prompt,,}" =~ ^(y|yes)$ ]]; then
         DB_REMOTE="y"
         read -r -p "${sub_spacer}Host address (FQDN or IP): " DB_HOST
         read -r -p "${sub_spacer}Port (leave empty for 5432): " input_port
@@ -308,7 +308,7 @@ EOF
 # Function to install Adminer (Optional) 
 install_adminer() {
     read -r -p "${spacer}Would you like to add Adminer? <y/N> " prompt
-    if [[ "${prompt,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y)$ ]]; then
+    if [[ "${prompt,,}" =~ ^(y|yes)$ ]]; then
     msg_info "Installing Adminer"
     $STD apt -y install adminer
     $STD a2enconf adminer
@@ -389,10 +389,10 @@ EOF
 
     systemctl daemon-reload
 
-    read -r -p "${spacer}Do you want to start the Paperless services now (Default: yes)? <y/N> " start_services
+    read -r -p "${spacer}Do you want to start the Paperless services now (Default: yes), or would you like to make some manual tweaks? <y/N> " start_services
     start_services=${start_services:-y}
 
-    if [[ "${start_services,,}" =~ ^(y|Y|Yes|yEs|yeS|YES|Y|)$ ]]; then
+    if [[ "${start_services,,}" =~ ^(y|yes)$ ]]; then
         $STD systemctl enable --now paperless-consumer paperless-webserver paperless-scheduler paperless-task-queue.service
         msg_ok "Started and enabled Services"
     else
